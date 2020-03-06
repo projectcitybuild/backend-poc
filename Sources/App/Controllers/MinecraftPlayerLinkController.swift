@@ -10,12 +10,6 @@ import FluentMySQL
 
 final class MinecraftPlayerLinkController {
 
-    struct CustomError: AbortError {
-        var status: HTTPResponseStatus
-        var reason: String
-        var identifier: String
-    }
-
     func index(_ request: Request) throws -> Future<MinecraftAuthCode.Resource> {
         struct RequestBody: Content {
             let minecraftUUID: String
@@ -29,6 +23,7 @@ final class MinecraftPlayerLinkController {
             .flatMap { requestBody -> EventLoopFuture<MinecraftAuthCode> in
                 let uuid = requestBody.minecraftUUID.replacingOccurrences(of: "-", with: "")
 
+                // TODO: query Mojang API for UUID existence first
                 return MinecraftPlayer.getOrCreate(
                         request: request,
                         uuid: uuid,
@@ -38,7 +33,7 @@ final class MinecraftPlayerLinkController {
                         // Re-authenticating a Minecraft account when it's already linked is not currently
                         // supported, as this may cause some unexpected results
                         guard player.accountId == nil else {
-                            throw CustomError(status: .forbidden, reason: "This UUID has already been authenticated", identifier: "account_already_linked")
+                            throw CustomHttpError(status: .forbidden, reason: "This UUID has already been authenticated", identifier: "account_already_linked")
                         }
 
                         let oneHour: Double = 60 * 60
