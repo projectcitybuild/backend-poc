@@ -56,3 +56,27 @@ extension MinecraftPlayer: Content {}
 
 /// Allows `MinecraftPlayer` to be used as a dynamic parameter in route definitions.
 extension MinecraftPlayer: Parameter {}
+
+
+extension MinecraftPlayer: MySQLMigration {
+
+    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
+        return MySQLDatabase.create(MinecraftPlayer.self, on: connection) { (builder: SchemaCreator<MinecraftPlayer>) in
+            builder.field(for: \.id, isIdentifier: true)
+            builder.field(for: \.uuid)
+            builder.field(for: \.accountId)
+            builder.field(for: \.playtime)
+            builder.field(for: \.lastSeenAt)
+        }
+    }
+}
+
+extension MinecraftPlayer {
+
+    static func getOrCreate(request: Request, uuid: String, modelToCreate: @escaping @autoclosure () -> MinecraftPlayer) -> EventLoopFuture<Self> {
+        return MinecraftPlayer.query(on: request)
+            .filter(\.uuid, .equal, uuid)
+            .first()
+            .flatMapIfNil { modelToCreate().create(on: request) }
+    }
+}

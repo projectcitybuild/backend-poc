@@ -42,3 +42,17 @@ extension MinecraftPlayerAlias {
 
 /// Allows `MinecraftPlayerAlias` to be encoded to and decoded from HTTP messages.
 extension MinecraftPlayerAlias: Content {}
+
+
+extension MinecraftPlayerAlias: MySQLMigration {
+
+    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
+        return MySQLDatabase.create(MinecraftPlayerAlias.self, on: connection) { (builder: SchemaCreator<MinecraftPlayerAlias>) in
+            builder.field(for: \.id, isIdentifier: true)
+            builder.field(for: \.minecraftPlayerId)
+            builder.field(for: \.alias)
+            builder.field(for: \.createdAt)
+            builder.field(for: \.updatedAt)
+        }
+    }
+}

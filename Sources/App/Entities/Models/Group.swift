@@ -16,7 +16,7 @@ struct Group: MySQLModel {
 
     var alias: String
 
-    var discourseName: String
+    var discourseName: String?
 
     var isDefault: Bool
 
@@ -48,3 +48,19 @@ extension Group: Content {}
 
 /// Allows `Group` to be used as a dynamic parameter in route definitions.
 extension Group: Parameter {}
+
+
+extension Group: MySQLMigration {
+
+    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
+        return MySQLDatabase.create(Group.self, on: connection) { (builder: SchemaCreator<Group>) in
+            builder.field(for: \.id, isIdentifier: true)
+            builder.field(for: \.name)
+            builder.field(for: \.alias)
+            builder.field(for: \.discourseName)
+            builder.field(for: \.isDefault)
+            builder.field(for: \.isStaff)
+            builder.field(for: \.isAdmin)
+        }
+    }
+}

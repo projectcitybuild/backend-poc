@@ -76,3 +76,20 @@ extension Account: Content {}
 
 /// Allows `Account` to be used as a dynamic parameter in route definitions.
 extension Account: Parameter {}
+
+
+extension Account: MySQLMigration {
+
+    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
+        return MySQLDatabase.create(Account.self, on: connection) { (builder: SchemaCreator<Account>) in
+            builder.field(for: \.id, isIdentifier: true)
+            builder.field(for: \.email)
+            builder.field(for: \.username)
+            builder.field(for: \.password)
+            builder.field(for: \.lastLoginIp)
+            builder.field(for: \.lastLoginAt)
+            builder.field(for: \.createdAt)
+            builder.field(for: \.updatedAt)
+        }
+    }
+}

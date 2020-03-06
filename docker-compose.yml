@@ -1,0 +1,13 @@
+version: "3.7"
+services:
+  db:
+    image: mysql:5
+    env_file:
+      - .env
+    networks:
+      - pcb_network
+    ports:
+      - "3306:3306"
+    container_name: pcb_mysql
+networks:
+  pcb_network:
