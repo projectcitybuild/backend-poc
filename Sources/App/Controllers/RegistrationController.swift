@@ -1,5 +1,5 @@
 //
-//  AccountController.swift
+//  RegistrationController.swift
 //  App
 //
 //  Created by Andy Saw on 2020/03/06.
@@ -8,16 +8,25 @@
 import Vapor
 import FluentMySQL
 
-final class AccountController {
+final class RegistrationController {
 
     func create(_ request: Request) throws -> Future<Account> {
-         struct RequestBody: Content {
+         struct RequestBody: Content, Validatable, Reflectable {
             let email: String
             let username: String
             let password: String
+
+            static func validations() throws -> Validations<RequestBody> {
+                var validations = Validations(RequestBody.self)
+                try validations.add(\.email, .email && !.empty)
+                try validations.add(\.username, !.empty && .allowedDiscourseUsername)
+                try validations.add(\.password, !.empty && .count(8...)) // Discourse requires 8 chars min password
+                return validations
+            }
         }
 
         return try request.content.decode(RequestBody.self).flatMap { requestBody in
+            // TODO: validate with Discourse username rule as well
             let validation = Account.query(on: request)
                 .filter(\.email, .equal, requestBody.email)
                 .filter(\.username, .equal, requestBody.username)
@@ -25,10 +34,10 @@ final class AccountController {
                 .map { account -> Void in
                     if let account = account {
                         if account.email == requestBody.email {
-                            throw CustomHttpError(status: .badRequest, reason: "This email address is already in use", identifier: "email_taken")
+                            throw BasicValidationError("This email address is already in use")
                         }
                         if account.username == requestBody.username {
-                            throw CustomHttpError(status: .badRequest, reason: "This username is already in use", identifier: "username_taken")
+                            throw BasicValidationError("This username is already in use")
                         }
                         // TODO: log this
                         throw CustomHttpError(status: .internalServerError, reason: "Account already exists", identifier: "matching_account_found")
@@ -62,6 +71,8 @@ final class AccountController {
                     }
                 }
             }
+
+            // TODO: send email to user for activation
         }
     }
 
