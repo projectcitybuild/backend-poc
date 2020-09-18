@@ -6,49 +6,38 @@
 //
 
 import Vapor
-import FluentMySQL
-import Authentication
+import FluentMySQLDriver
 
-struct Account: MySQLModel {
+struct Account: Model {
 
-    /// The unique identifier for this `Account`.
+    @ID(key: "account_id")
     var id: Int?
 
+    @Field(key: "email")
     var email: String
 
+    @Field(key: "username")
     var username: String
 
+    @Field(key: "password")
     var password: String
 
+    @Field(key: "last_login_ip")
     var lastLoginIp: String?
 
+    @Field(key: "last_login_at")
     var lastLoginAt: Date?
 
+    @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
 
+    @Timestamp(key: "updated_at", on: .update)
     var updatedAt: Date?
 }
 
 extension Account {
 
-    static let entity = "accounts"
-
-    static let createdAtKey: TimestampKey? = \.createdAt
-    static let updatedAtKey: TimestampKey? = \.updatedAt
-}
-
-extension Account {
-
-    enum CodingKeys: String, CodingKey {
-        case id = "account_id"
-        case email = "email"
-        case username = "username"
-        case password = "password"
-        case lastLoginIp = "last_login_ip"
-        case lastLoginAt = "last_login_at"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
+    static let schema = "accounts"
 }
 
 extension Account {
@@ -78,18 +67,18 @@ extension Account: Content {}
 extension Account: Parameter {}
 
 
-extension Account: MySQLMigration {
-
-    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
-        return MySQLDatabase.create(Account.self, on: connection) { (builder: SchemaCreator<Account>) in
-            builder.field(for: \.id, isIdentifier: true)
-            builder.field(for: \.email)
-            builder.field(for: \.username)
-            builder.field(for: \.password)
-            builder.field(for: \.lastLoginIp)
-            builder.field(for: \.lastLoginAt)
-            builder.field(for: \.createdAt)
-            builder.field(for: \.updatedAt)
-        }
-    }
-}
+//extension Account: MySQLMigration {
+//
+//    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
+//        return MySQLDatabase.create(Account.self, on: connection) { (builder: SchemaCreator<Account>) in
+//            builder.field(for: \.id, isIdentifier: true)
+//            builder.field(for: \.email)
+//            builder.field(for: \.username)
+//            builder.field(for: \.password)
+//            builder.field(for: \.lastLoginIp)
+//            builder.field(for: \.lastLoginAt)
+//            builder.field(for: \.createdAt)
+//            builder.field(for: \.updatedAt)
+//        }
+//    }
+//}

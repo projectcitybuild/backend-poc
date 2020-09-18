@@ -6,41 +6,35 @@
 //
 
 import Vapor
-import FluentMySQL
+import FluentMySQLDriver
 
-struct Group: MySQLModel {
+final class Group: Model {
 
+    @ID(key: "group_id")
     var id: Int?
 
+    @Field(key: "name")
     var name: String
 
+    @Field(key: "alias")
     var alias: String
 
+    @Field(key: "discourse_name")
     var discourseName: String?
 
+    @Field(key: "is_default")
     var isDefault: Bool
 
+    @Field(key: "is_staff")
     var isStaff: Bool
 
+    @Field(key: "is_admin")
     var isAdmin: Bool
 }
 
 extension Group {
 
-    static let entity = "groups"
-}
-
-extension Group {
-
-    enum CodingKeys: String, CodingKey {
-        case id = "group_id"
-        case name = "name"
-        case alias = "alias"
-        case discourseName = "discourse_name"
-        case isDefault = "is_default"
-        case isStaff = "is_staff"
-        case isAdmin = "is_admin"
-    }
+    static let schema = "groups"
 }
 
 /// Allows `Group` to be encoded to and decoded from HTTP messages.
@@ -50,17 +44,17 @@ extension Group: Content {}
 extension Group: Parameter {}
 
 
-extension Group: MySQLMigration {
-
-    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
-        return MySQLDatabase.create(Group.self, on: connection) { (builder: SchemaCreator<Group>) in
-            builder.field(for: \.id, isIdentifier: true)
-            builder.field(for: \.name)
-            builder.field(for: \.alias)
-            builder.field(for: \.discourseName)
-            builder.field(for: \.isDefault)
-            builder.field(for: \.isStaff)
-            builder.field(for: \.isAdmin)
-        }
-    }
-}
+//extension Group: MySQLMigration {
+//
+//    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
+//        return MySQLDatabase.create(Group.self, on: connection) { (builder: SchemaCreator<Group>) in
+//            builder.field(for: \.id, isIdentifier: true)
+//            builder.field(for: \.name)
+//            builder.field(for: \.alias)
+//            builder.field(for: \.discourseName)
+//            builder.field(for: \.isDefault)
+//            builder.field(for: \.isStaff)
+//            builder.field(for: \.isAdmin)
+//        }
+//    }
+//}

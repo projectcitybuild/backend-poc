@@ -1,20 +1,21 @@
 import Vapor
-import Authentication
 
 /// Register your application's routes here.
-public func routes(_ router: Router) throws {
+public func routes(_ app: Application) throws {
     // Basic "It works" example
-    router.get { req in
+    app.get { req in
         return "It works!"
     }
     
     // Basic "Hello, world!" example
-    router.get("hello") { req in
+    app.get("hello") { req in
         return "Hello, world!"
     }
 
-    let minecraftPlayerLinkController = MinecraftPlayerLinkController()
-    router.post("authenticate/minecraft", use: minecraftPlayerLinkController.index)
+//    let minecraftPlayerLinkController = MinecraftPlayerLinkController()
+//    app.post("authenticate/minecraft", use: minecraftPlayerLinkController.index))
+
+    try app.register(collection: PlayerAuthenticateController())
 
     // Example of configuring a controller
 //    let todoController = TodoController()
@@ -22,7 +23,7 @@ public func routes(_ router: Router) throws {
 //    router.post("todos", use: todoController.create)
 //    router.delete("todos", Todo.parameter, use: todoController.delete)
 
-    let authMiddleware = Account.basicAuthMiddleware(using: BCryptDigest())
+//    let authMiddleware = Account.basicAuthMiddleware(using: BCryptDigest())
 
 //    router.grouped(authMiddleware) { router in
 //        

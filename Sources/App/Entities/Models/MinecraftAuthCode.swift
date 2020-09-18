@@ -6,35 +6,29 @@
 //
 
 import Vapor
-import FluentMySQL
+import FluentMySQLDriver
 
-struct MinecraftAuthCode: MySQLModel {
+struct MinecraftAuthCode: Model {
 
+    @ID(key: "minecraft_auth_code_id")
     var id: Int?
 
+    @Field(key: "uuid")
     var uuid: String
 
+    @Field(key: "token")
     var token: String
 
+    @Field(key: "player_minecraft_id")
     var minecraftPlayerId: Int
 
+    @Field(key: "expires_At")
     var expiresAt: Date
 }
 
 extension MinecraftAuthCode {
 
-    static let entity = "minecraft_auth_codes"
-}
-
-extension MinecraftAuthCode {
-
-    enum CodingKeys: String, CodingKey {
-        case id = "minecraft_auth_code_id"
-        case uuid = "uuid"
-        case token = "token"
-        case minecraftPlayerId = "player_minecraft_id"
-        case expiresAt = "expires_at"
-    }
+    static let schema = "minecraft_auth_codes"
 }
 
 extension MinecraftAuthCode {
@@ -48,18 +42,18 @@ extension MinecraftAuthCode {
 extension MinecraftAuthCode: Content {}
 
 
-extension MinecraftAuthCode: MySQLMigration {
-
-    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
-        return MySQLDatabase.create(MinecraftAuthCode.self, on: connection) { (builder: SchemaCreator<MinecraftAuthCode>) in
-            builder.field(for: \.id, isIdentifier: true)
-            builder.field(for: \.uuid)
-            builder.field(for: \.token)
-            builder.field(for: \.minecraftPlayerId)
-            builder.field(for: \.expiresAt)
-        }
-    }
-}
+//extension MinecraftAuthCode: MySQLMigration {
+//
+//    static func prepare(on connection: MySQLConnection) -> EventLoopFuture<Void> {
+//        return MySQLDatabase.create(MinecraftAuthCode.self, on: connection) { (builder: SchemaCreator<MinecraftAuthCode>) in
+//            builder.field(for: \.id, isIdentifier: true)
+//            builder.field(for: \.uuid)
+//            builder.field(for: \.token)
+//            builder.field(for: \.minecraftPlayerId)
+//            builder.field(for: \.expiresAt)
+//        }
+//    }
+//}
 
 extension MinecraftAuthCode: ModelResourceConvertible {
 

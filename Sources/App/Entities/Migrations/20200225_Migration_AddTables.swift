@@ -5,7 +5,7 @@
 //  Created by Andy Saw on 2020/02/25.
 //
 
-import FluentMySQL
+import FluentMySQLDriver
 
 //struct Migration_20200225_AddTables: MySQLMigration {
 //

@@ -6,11 +6,11 @@
 //
 
 import Vapor
-import FluentMySQL
+import FluentMySQLDriver
 
 final class RegistrationController {
 
-    func create(_ request: Request) throws -> Future<Account> {
+    func create(_ request: Request) throws -> EventLoopFuture<Account> {
          struct RequestBody: Content, Validatable, Reflectable {
             let email: String
             let username: String
@@ -25,55 +25,55 @@ final class RegistrationController {
             }
         }
 
-        return try request.content.decode(RequestBody.self).flatMap { requestBody in
-            // TODO: validate with Discourse username rule as well
-            let validation = Account.query(on: request)
-                .filter(\.email, .equal, requestBody.email)
-                .filter(\.username, .equal, requestBody.username)
-                .first()
-                .map { account -> Void in
-                    if let account = account {
-                        if account.email == requestBody.email {
-                            throw BasicValidationError("This email address is already in use")
-                        }
-                        if account.username == requestBody.username {
-                            throw BasicValidationError("This username is already in use")
-                        }
-                        // TODO: log this
-                        throw CustomHttpError(status: .internalServerError, reason: "Account already exists", identifier: "matching_account_found")
-                    }
-                    return ()
-                }
+        let body = try request.content.decode(RequestBody.self)
 
-            return validation.then { _ in
-                return request.transaction(on: .mysql) { connection in
-                    let account = Account(
-                        email: requestBody.email,
-                        username: requestBody.username,
-                        password: requestBody.password,
-                        lastLoginIp: request.http.remotePeer.hostname,
-                        lastLoginAt: nil,
-                        createdAt: Date(),
-                        updatedAt: Date()
-                    )
-                    return account.create(on: connection).flatMap { account in
-
-                        // Attach default group to user
-                        return Group.query(on: connection).filter(\.isDefault, .equal, true).first()
-                            .flatMap { group -> EventLoopFuture<AccountGroup> in
-                                guard let group = group else {
-                                    // TODO: log this
-                                    throw CustomHttpError(status: .internalServerError, reason: "No default group available", identifier: "no_default_group_set")
-                                }
-                                return account.groups.attach(group, on: connection)
-                            }
-                            .map { _ in account }
+        // TODO: validate with Discourse username rule as well
+        let validation = Account.query(on: request)
+            .filter(\.email, .equal, body.email)
+            .filter(\.username, .equal, body.username)
+            .first()
+            .map { account -> Void in
+                if let account = account {
+                    if account.email == body.email {
+                        throw BasicValidationError("This email address is already in use")
                     }
+                    if account.username == body.username {
+                        throw BasicValidationError("This username is already in use")
+                    }
+                    // TODO: log this
+                    throw CustomHttpError(status: .internalServerError, reason: "Account already exists", identifier: "matching_account_found")
                 }
+                return ()
             }
 
-            // TODO: send email to user for activation
+        return validation.then { _ in
+            return request.transaction(on: .mysql) { connection in
+                let account = Account(
+                    email: requestBody.email,
+                    username: requestBody.username,
+                    password: requestBody.password,
+                    lastLoginIp: request.http.remotePeer.hostname,
+                    lastLoginAt: nil,
+                    createdAt: Date(),
+                    updatedAt: Date()
+                )
+                return account.create(on: connection).flatMap { account in
+
+                    // Attach default group to user
+                    return Group.query(on: connection).filter(\.isDefault, .equal, true).first()
+                        .flatMap { group -> EventLoopFuture<AccountGroup> in
+                            guard let group = group else {
+                                // TODO: log this
+                                throw CustomHttpError(status: .internalServerError, reason: "No default group available", identifier: "no_default_group_set")
+                            }
+                            return account.groups.attach(group, on: connection)
+                        }
+                        .map { _ in account }
+                }
+            }
         }
+
+        // TODO: send email to user for activation
     }
 
 //    func delete(_ request: Request) throws -> Future<HTTPStatus> {
